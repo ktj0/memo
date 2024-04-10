@@ -47,4 +47,15 @@ public class MemoController {
             throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
         }
     }
+
+    @DeleteMapping("memos/{id}")
+    public Long deleteMemo(@PathVariable Long id) {
+        if (memoList.containsKey(id)) {
+            memoList.remove(id);
+
+            return id;
+        } else {
+            throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
+        }
+    }
 }
