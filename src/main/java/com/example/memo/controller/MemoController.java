@@ -88,17 +88,21 @@ public class MemoController {
             throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
         }
     }
-//
-//    @DeleteMapping("memos/{id}")
-//    public Long deleteMemo(@PathVariable Long id) {
-//        if (memoList.containsKey(id)) {
-//            memoList.remove(id);
-//
-//            return id;
-//        } else {
-//            throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
-//        }
-//    }
+
+    @DeleteMapping("memos/{id}")
+    public Long deleteMemo(@PathVariable Long id) {
+        Memo memo = findById(id);
+
+        if (memo != null) {
+            String sql = "DELETE FROM memo WHERE id = ?";
+
+            jdbcTemplate.update(sql, id);
+
+            return id;
+        } else {
+            throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
+        }
+    }
 
     private Memo findById(Long id) {
         String sql = "SELECT * FROM memo WHERE id = ?";
@@ -106,9 +110,9 @@ public class MemoController {
         return jdbcTemplate.query(sql, resultSet -> {
             if (resultSet.next()) {
                 String username = resultSet.getString("username");
-                String contnets = resultSet.getString("contents");
+                String contents = resultSet.getString("contents");
 
-                Memo memo = new Memo(username, contnets);
+                Memo memo = new Memo(username, contents);
 
                 return memo;
             } else {
