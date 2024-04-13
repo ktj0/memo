@@ -14,9 +14,9 @@ public class Memo {
     private String username;
     private String contents;
 
-    public Memo(MemoRequestDto requestDto) {
-        this.username = requestDto.getUsername();
-        this.contents = requestDto.getContents();
+    public Memo(String username, String contents) {
+        this.username = username;
+        this.contents = contents;
     }
 
     public void update(MemoRequestDto requestDto) {

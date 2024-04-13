@@ -29,7 +29,10 @@ public class MemoController {
 
     @PostMapping("/memos")
     public MemoResponseDto createMemo(@RequestBody MemoRequestDto requestDto) {
-        Memo memo = new Memo(requestDto);
+        String requestUsername = requestDto.getUsername();
+        String requestContents = requestDto.getContents();
+
+        Memo memo = new Memo(requestUsername, requestContents);
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
@@ -71,19 +74,20 @@ public class MemoController {
         });
     }
 
-//    @PutMapping("/memos/{id}")
-//    public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto) {
-//
-//        if (memoList.containsKey(id)) {
-//            Memo memo = memoList.get(id);
-//
-//            memo.update(requestDto);
-//
-//            return memo.getId();
-//        } else {
-//            throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
-//        }
-//    }
+    @PutMapping("/memos/{id}")
+    public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto) {
+        Memo memo = findById(id);
+
+        if (memo != null) {
+            String sql = "UPDATE memo SET username = ?, contents = ? where id = ?";
+
+            jdbcTemplate.update(sql, requestDto.getUsername(), requestDto.getContents(), id);
+
+            return id;
+        } else {
+            throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
+        }
+    }
 //
 //    @DeleteMapping("memos/{id}")
 //    public Long deleteMemo(@PathVariable Long id) {
@@ -95,4 +99,21 @@ public class MemoController {
 //            throw new IllegalArgumentException("선택된 메모는 존재하지 않습니다.");
 //        }
 //    }
+
+    private Memo findById(Long id) {
+        String sql = "SELECT * FROM memo WHERE id = ?";
+
+        return jdbcTemplate.query(sql, resultSet -> {
+            if (resultSet.next()) {
+                String username = resultSet.getString("username");
+                String contnets = resultSet.getString("contents");
+
+                Memo memo = new Memo(username, contnets);
+
+                return memo;
+            } else {
+                return null;
+            }
+        }, id);
+    }
 }
