@@ -4,11 +4,14 @@ import com.example.memo.dto.MemoRequestDto;
 import com.example.memo.dto.MemoResponseDto;
 import com.example.memo.entity.Memo;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,20 +46,34 @@ public class MemoController {
         Long id = keyHolder.getKey().longValue();
         memo.setId(id);
 
-        MemoResponseDto memoResponseDto = new MemoResponseDto(memo);
+        String username = memo.getUsername();
+        String contents = memo.getContents();
+
+
+        MemoResponseDto memoResponseDto = new MemoResponseDto(id, username, contents);
 
         return memoResponseDto;
     }
 
-//    @GetMapping("/memos")
-//    public List<MemoResponseDto> getMemos() {
-//        List<MemoResponseDto> responseList = memoList.values().stream().map(MemoResponseDto::new).toList();
-//
-//        return responseList;
-//    }
-//
+    @GetMapping("/memos")
+    public List<MemoResponseDto> getMemos() {
+        String sql = "SELECT * FROM memo";
+
+        return jdbcTemplate.query(sql, new RowMapper<MemoResponseDto>() {
+            @Override
+            public MemoResponseDto mapRow(ResultSet rs, int rowNum) throws SQLException {
+                Long id = rs.getLong("id");
+                String username = rs.getString("username");
+                String contents = rs.getString("contents");
+
+                return new MemoResponseDto(id, username, contents);
+            }
+        });
+    }
+
 //    @PutMapping("/memos/{id}")
 //    public Long updateMemo(@PathVariable Long id, @RequestBody MemoRequestDto requestDto) {
+//
 //        if (memoList.containsKey(id)) {
 //            Memo memo = memoList.get(id);
 //
