@@ -55,6 +55,4 @@ public class MemoController {
 
         return memoService.deleteMemo(id);
     }
-
-
 }

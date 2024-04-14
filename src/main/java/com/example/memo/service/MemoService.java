@@ -3,6 +3,7 @@ package com.example.memo.service;
 import com.example.memo.dto.MemoRequestDto;
 import com.example.memo.dto.MemoResponseDto;
 import com.example.memo.entity.Memo;
+import com.example.memo.repository.MemoRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -27,50 +28,28 @@ public class MemoService {
 
         Memo memo = new Memo(username, contents);
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MemoRepository memoRepository = new MemoRepository(jdbcTemplate);
 
-        String sql = "INSERT INTO memo (username, contents) VALUES (?, ?)";
+        Memo saveMemo = memoRepository.save(memo);
 
-        jdbcTemplate.update(con -> {
-            PreparedStatement preparedStatement = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-
-            preparedStatement.setString(1, memo.getUsername());
-            preparedStatement.setString(2, memo.getContents());
-
-            return preparedStatement;
-        }, keyHolder);
-
-        Long id = keyHolder.getKey().longValue();
-
-        memo.setId(id);
-
-        MemoResponseDto memoResponseDto = new MemoResponseDto(id, username, contents);
+        MemoResponseDto memoResponseDto = new MemoResponseDto(saveMemo);
 
         return memoResponseDto;
     }
 
     public List<MemoResponseDto> getMemos() {
-        String sql = "SELECT * FROM memo";
+        MemoRepository memoRepository = new MemoRepository(jdbcTemplate);
 
-        return jdbcTemplate.query(sql, new RowMapper<MemoResponseDto>() {
-            @Override
-            public MemoResponseDto mapRow(ResultSet rs, int rowNum) throws SQLException {
-                Long id = rs.getLong("id");
-                String username = rs.getString("username");
-                String contents = rs.getString("contents");
-
-                return new MemoResponseDto(id, username, contents);
-            }
-        });
+        return memoRepository.findAll();
     }
 
     public Long updateMemo(long id, MemoRequestDto requestDto) {
-        Memo memo = findById(id);
+        MemoRepository memoRepository = new MemoRepository(jdbcTemplate);
+
+        Memo memo = memoRepository.findById(id);
 
         if (memo != null) {
-            String sql = "UPDATE memo SET username = ?, contents = ? WHERE id = ?";
-
-            jdbcTemplate.update(sql, requestDto.getUsername(), requestDto.getContents(), id);
+            memoRepository.update(id, requestDto);
 
             return id;
         } else {
@@ -79,34 +58,16 @@ public class MemoService {
     }
 
     public Long deleteMemo(Long id) {
-        Memo memo = findById(id);
+        MemoRepository memoRepository = new MemoRepository(jdbcTemplate);
+
+        Memo memo = memoRepository.findById(id);
 
         if (memo != null) {
-            String sql = "DELETE FROM memo WHERE id = ?";
-
-            jdbcTemplate.update(sql, id);
+            memoRepository.delete(id);
 
             return id;
         } else {
             throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
         }
-    }
-
-    private Memo findById(Long id) {
-
-        String sql = "SELECT * FROM memo WHERE id = ?";
-
-        return jdbcTemplate.query(sql, resultSet -> {
-            if (resultSet.next()) {
-                String username = resultSet.getString("username");
-                String contents = resultSet.getString("contents");
-
-                Memo memo = new Memo(username, contents);
-
-                return memo;
-            } else {
-                return null;
-            }
-        }, id);
     }
 }
