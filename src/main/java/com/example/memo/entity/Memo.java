@@ -1,22 +1,28 @@
 package com.example.memo.entity;
 
 import com.example.memo.dto.MemoRequestDto;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Entity
+@Table(name = "memo")
 @Getter
 @Setter
-@AllArgsConstructor
+@NoArgsConstructor
 public class Memo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "username", nullable = false)
     private String username;
+    @Column(name = "contents", nullable = false, length = 500)
     private String contents;
 
-    public Memo(String username, String contents) {
-        this.username = username;
-        this.contents = contents;
+    public Memo(MemoRequestDto requestDto) {
+        this.username = requestDto.getUsername();
+        this.contents = requestDto.getContents();
     }
 
     public void update(MemoRequestDto requestDto) {

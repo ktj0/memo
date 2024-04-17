@@ -4,6 +4,7 @@ import com.example.memo.dto.MemoRequestDto;
 import com.example.memo.dto.MemoResponseDto;
 import com.example.memo.entity.Memo;
 import com.example.memo.repository.MemoRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +16,7 @@ public class MemoService {
     private final MemoRepository memoRepository;
 
     public MemoResponseDto createMemo(MemoRequestDto requestDto) {
-        String username = requestDto.getUsername();
-        String contents = requestDto.getContents();
-
-        Memo memo = new Memo(username, contents);
+        Memo memo = new Memo(requestDto);
 
         Memo saveMemo = memoRepository.save(memo);
 
@@ -28,30 +26,29 @@ public class MemoService {
     }
 
     public List<MemoResponseDto> getMemos() {
-        return memoRepository.findAll();
+        return memoRepository.findAll().stream().map(MemoResponseDto::new).toList();
     }
 
+    private Memo findMemo(Long id) {
+        return memoRepository.findById(id).orElseThrow(() ->
+            new IllegalArgumentException("선택된 메모는 존재하지 않습니다.")
+        );
+    }
+
+    @Transactional
     public Long updateMemo(long id, MemoRequestDto requestDto) {
-        Memo memo = memoRepository.findById(id);
+        Memo memo = findMemo(id);
 
-        if (memo != null) {
-            memoRepository.update(id, requestDto);
+        memo.update(requestDto);
 
-            return id;
-        } else {
-            throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
-        }
+        return id;
     }
 
     public Long deleteMemo(Long id) {
-        Memo memo = memoRepository.findById(id);
+        Memo memo = findMemo(id);
 
-        if (memo != null) {
-            memoRepository.delete(id);
+        memoRepository.delete(memo);
 
-            return id;
-        } else {
-            throw new IllegalArgumentException("선택한 메모는 존재하지 않습니다.");
-        }
+        return id;
     }
 }
