@@ -51,4 +51,8 @@ public class MemoService {
 
         return id;
     }
+
+    public List<MemoResponseDto> getMemoByKeyword(String keyword) {
+        return memoRepository.findAllByContentsContainingOrderByModifiedAtDesc(keyword).stream().map(MemoResponseDto::new).toList();
+    }
 }
